@@ -6,18 +6,28 @@ import { join, resolve } from "node:path";
 const STORY = "Payday! I bought my own freedom.";
 
 // The bounty asks for exactly six words in a single line, 1-60 characters.
+// The gate below enforces all four constraints at once so a bad story can
+// never reach entry.txt: the word count is the headline rule (six words,
+// no more, no less), the single-line check keeps the file one line with no
+// trailing newline, and the length check keeps it inside 1-60 characters.
 const WORD_COUNT = 6;
+const MAX_LENGTH = 60;
 
-const words = STORY.trim().split(/\s+/);
-if (words.length !== WORD_COUNT) {
-  throw new Error(`expected exactly ${WORD_COUNT} words, got ${words.length}`);
+function validateStory(story: string): string[] {
+  const words = story.trim().split(/\s+/);
+  if (words.length !== WORD_COUNT) {
+    throw new Error(`expected exactly ${WORD_COUNT} words, got ${words.length}`);
+  }
+  if (story.trim() !== story || story.includes("\n") || story.includes("\r")) {
+    throw new Error("story must be a single non-empty line with no newline characters");
+  }
+  if (story.length === 0 || story.length > MAX_LENGTH) {
+    throw new Error(`story must be 1-${MAX_LENGTH} characters, got ${story.length}`);
+  }
+  return words;
 }
-if (STORY.trim() !== STORY || STORY.includes("\n") || STORY.includes("\r")) {
-  throw new Error("story must be a single non-empty line with no newline characters");
-}
-if (STORY.length === 0 || STORY.length > 60) {
-  throw new Error(`story must be 1-60 characters, got ${STORY.length}`);
-}
+
+const words = validateStory(STORY);
 
 function resolveOutputPath(): string {
   if (process.env.MAKEFUN_OUTPUT_DIR) return process.env.MAKEFUN_OUTPUT_DIR;
